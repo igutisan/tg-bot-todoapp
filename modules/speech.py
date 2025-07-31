@@ -19,7 +19,7 @@ async def transcribe_voice_message(user_id: int, voice_file) -> str | None:
         recognizer = sr.Recognizer()
         with sr.AudioFile(wav_file_path) as source:
             audio_data = recognizer.record(source)
-            return recognizer.recognize_google(audio_data, language="es-ES")
+            return recognizer.recognize_google(audio_data, language="en-US")
     except sr.UnknownValueError:
         return None
     except sr.RequestError as e:

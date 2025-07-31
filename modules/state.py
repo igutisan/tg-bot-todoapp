@@ -4,10 +4,10 @@ Manages the state of the bot.
 
 class BotState:
     def __init__(self):
-        self.user_tokens: dict[int, str] = {} # Almacena el token por user_id
-        self.waiting_for_email: dict[int, bool] = {} # Indica si estamos esperando un correo
-        self.waiting_for_password: dict[int, bool] = {} # Indica si estamos esperando una contraseña
-        self.temp_emails: dict[int, str] = {} # Almacena temporalmente el correo durante la autenticación
+        self.user_tokens: dict[int, str] = {} # Stores the token by user_id
+        self.waiting_for_email: dict[int, bool] = {} # Indicates if we are waiting for an email
+        self.waiting_for_password: dict[int, bool] = {} # Indicates if we are waiting for a password
+        self.temp_emails: dict[int, str] = {} # Temporarily stores the email during authentication
 
     def is_waiting_for_email(self, user_id: int) -> bool:
         return self.waiting_for_email.get(user_id, False)

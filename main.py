@@ -26,9 +26,9 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
     if not bot_state.get_user_token(user_id):
         bot_state.set_waiting_for_email(user_id, True)
-        await update.message.reply_text("Hola! Para comenzar, por favor, introduce tu correo electrónico.")
+        await update.message.reply_text("Hello! To start, please enter your email address.")
     else:
-        await update.message.reply_text("Ya estás autenticado. Puedes comenzar a gestionar tus tareas.")
+        await update.message.reply_text("You are already authenticated. You can start managing your tasks.")
 
 async def logout_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handles the /logout command."""
@@ -36,7 +36,7 @@ async def logout_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     bot_state.clear_user_auth_session(user_id)
     if user_id in bot_state.user_tokens:
         del bot_state.user_tokens[user_id]
-    await update.message.reply_text("Has cerrado sesión correctamente.")
+    await update.message.reply_text("You have successfully logged out.")
 
 # Message Handlers
 async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -51,9 +51,9 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
             bot_state.set_temp_email(user_id, message_text)
             bot_state.set_waiting_for_email(user_id, False)
             bot_state.set_waiting_for_password(user_id, True)
-            await update.message.reply_text("Correo electrónico recibido. Ahora, por favor, introduce tu contraseña.")
+            await update.message.reply_text("Email received. Now, please enter your password.")
         else:
-            await update.message.reply_text("El correo electrónico no es válido. Por favor, inténtalo de nuevo.")
+            await update.message.reply_text("The email address is not valid. Please try again.")
         return
 
     if bot_state.is_waiting_for_password(user_id):
@@ -63,9 +63,9 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
         if token:
             bot_state.set_user_token(user_id, token)
             bot_state.clear_user_auth_session(user_id)
-            await update.message.reply_text("Autenticación exitosa. Ahora puedes gestionar tus tareas.")
+            await update.message.reply_text("Authentication successful. You can now manage your tasks.")
         else:
-            await update.message.reply_text("Autenticación fallida. Por favor, revisa tus credenciales e inténtalo de nuevo, comenzando por tu correo electrónico.")
+            await update.message.reply_text("Authentication failed. Please check your credentials and try again, starting with your email.")
             bot_state.clear_user_auth_session(user_id)
             bot_state.set_waiting_for_email(user_id, True)
         return
@@ -73,7 +73,7 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
     # Task management flow
     token = bot_state.get_user_token(user_id)
     if not token:
-        await update.message.reply_text("Por favor, autentícate primero. Usa /start para comenzar.")
+        await update.message.reply_text("Please authenticate first. Use /start to begin.")
         return
 
     analysis = await get_gemini_analysis(message_text)
@@ -83,18 +83,18 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
     if intent == "crear_tarea":
         if task_name:
             await create_task_in_nestjs(task_name, token)
-            await update.message.reply_text(f"Tarea '{task_name}' creada.")
+            await update.message.reply_text(f"Task '{task_name}' created.")
         else:
-            await update.message.reply_text("No pude identificar el nombre de la tarea para crearla.")
+            await update.message.reply_text("Could not identify the task name to create it.")
 
     elif intent in ["completar_tarea", "en_proceso", "eliminar_tarea"]:
         if not task_name:
-            await update.message.reply_text(f"No pude identificar el nombre de la tarea para {intent.replace('_task', '')}.")
+            await update.message.reply_text(f"Could not identify the task name to {intent.replace('_task', '')}.")
             return
 
         tasks = await get_user_tasks_from_nestjs(token)
         if not tasks or not tasks.get('data'):
-            await update.message.reply_text(f"No encontré ninguna tarea para '{task_name}'.")
+            await update.message.reply_text(f"No task found for '{task_name}'.")
             return
 
         best_match, score = find_most_similar_task(task_name, tasks)
@@ -104,15 +104,15 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
             matched_task_name = best_match.get('title', task_name)
             if intent == "completar_tarea":
                 await complete_task_in_nestjs(task_id, token)
-                await update.message.reply_text(f"Tarea '{matched_task_name}' completada.")
+                await update.message.reply_text(f"Task '{matched_task_name}' completed.")
             elif intent == "en_proceso":
                 await process_task_in_nestjs(task_id, token)
-                await update.message.reply_text(f"Tarea '{matched_task_name}' marcada como 'en proceso'.")
+                await update.message.reply_text(f"Task '{matched_task_name}' marked as 'in progress'.")
             elif intent == "eliminar_tarea":
                 await delete_task_in_nestjs(task_id, token)
-                await update.message.reply_text(f"Tarea '{matched_task_name}' eliminada.")
+                await update.message.reply_text(f"Task '{matched_task_name}' deleted.")
         else:
-            await update.message.reply_text(f"No encontré una tarea que coincida con '{task_name}'.")
+            await update.message.reply_text(f"No task found matching '{task_name}'.")
 
     elif intent == "listar_tareas":
         tasks = await get_user_tasks_from_nestjs(token)
